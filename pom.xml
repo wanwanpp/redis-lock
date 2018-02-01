@@ -28,6 +28,7 @@
 
   <dependencies>
 
+
       <dependency>
           <groupId>org.springframework.data</groupId>
           <artifactId>spring-data-redis</artifactId>
@@ -66,7 +67,6 @@
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
           <version>1.2</version>
-          <!--<scope>test</scope>-->
       </dependency>
   </dependencies>
 </project>
