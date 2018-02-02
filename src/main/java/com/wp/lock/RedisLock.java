@@ -22,6 +22,9 @@ public class RedisLock implements Lock {
     private volatile boolean isLocked = false;
     private volatile Thread lockOwner = null;
 
+    /**
+     * 保证多线程下各线程都有自己的连接。
+     */
     private ThreadLocal<Jedis> localJedis = new ThreadLocal<Jedis>() {
         @Override
         protected Jedis initialValue() {
@@ -39,6 +42,7 @@ public class RedisLock implements Lock {
         try {
             while (true) {
                 //将锁作为key存储到redis缓存中，存储成功则获得锁
+                // 1 是setnx命令成功的响应消息。
                 if (1 == localJedis.get().setnx(key.getBytes(), LOCKED.getBytes())) {
                     //设置锁的有效期，也是锁的自动释放时间，也是一个客户端在其他客户端能抢占锁之前可以执行任务的时间
                     //可以防止因异常情况无法释放锁而造成死锁情况的发生
@@ -49,7 +53,7 @@ public class RedisLock implements Lock {
                     break;
                 }
                 //获取锁失败时，应该在随机延时后进行重试，避免不同客户端同时重试导致谁都无法拿到锁的情况出现
-                Thread.sleep(r.nextInt(5) + 5);
+                Thread.sleep(r.nextInt(15) + 5);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,8 +69,7 @@ public class RedisLock implements Lock {
     }
 
     @Override
-    public void lockInterruptibly() throws InterruptedException {
-    }
+    public void lockInterruptibly() throws InterruptedException {}
 
     @Override
     public boolean tryLock() {
@@ -92,7 +95,7 @@ public class RedisLock implements Lock {
                     lockOwner = Thread.currentThread();
                     return true;
                 }
-                Thread.sleep(r.nextInt(5) + 5);
+                Thread.sleep(r.nextInt(15) + 5);
             }
         } catch (Exception e) {
             e.printStackTrace();
