@@ -5,10 +5,8 @@ import redis.clients.jedis.Jedis;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
-public class RedisLock implements Lock {
+public class RedisLock implements DistributedLock {
 
     /**
      * 存储到redis中的锁标志
@@ -69,9 +67,6 @@ public class RedisLock implements Lock {
     }
 
     @Override
-    public void lockInterruptibly() throws InterruptedException {}
-
-    @Override
     public boolean tryLock() {
         if (1 == localJedis.get().setnx(key.getBytes(), LOCKED.getBytes())) {
             localJedis.get().expire(key, EXPIRE);
@@ -83,7 +78,7 @@ public class RedisLock implements Lock {
     }
 
     @Override
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+    public boolean tryLock(long time, TimeUnit unit) {
         long nanos = unit.toNanos(time);
         long nowTime = System.nanoTime();
         final Random r = new Random();
@@ -101,10 +96,5 @@ public class RedisLock implements Lock {
             e.printStackTrace();
         }
         return false;
-    }
-
-    @Override
-    public Condition newCondition() {
-        return null;
     }
 }
